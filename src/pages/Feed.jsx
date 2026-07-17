@@ -4,22 +4,9 @@ import Sidebar from "../components/layout/Sidebar";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import WorkoutCard from "../components/ui/WorkoutCard";
 import FloatingActionButton from "../components/ui/FloatingActionButton";
-import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import ErrorMessage from "../components/ui/ErrorMessage";
-
-const GET_FEED = gql`
-  query GetFeed {
-    allFeeds {
-      id
-      user
-      time
-      stats
-      description
-      workout
-    }
-  }
-`;
+import { GET_FEED } from "../../database/graphql/queries/feed";
 
 function Feed({ onNavigateToNewPost, onNavigateToProfile, onLogout }) {
   const [activeItem, setActiveItem] = useState("feed");
