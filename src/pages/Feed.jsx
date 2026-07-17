@@ -6,6 +6,7 @@ import WorkoutCard from "../components/ui/WorkoutCard";
 import FloatingActionButton from "../components/ui/FloatingActionButton";
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
+import ErrorMessage from "../components/ui/ErrorMessage";
 
 const GET_FEED = gql`
   query GetFeed {
@@ -77,11 +78,7 @@ function Feed({ onNavigateToNewPost, onNavigateToProfile, onLogout }) {
 
             {/* Error State */}
             {error && (
-              <div className="flex justify-center items-center py-8">
-                <div className="text-red-500">
-                  Erro ao carregar treinos: {error}
-                </div>
-              </div>
+              <ErrorMessage message="Erro ao carregar treinos:" error={error} />
             )}
 
             {/* Workout Cards Grid */}
