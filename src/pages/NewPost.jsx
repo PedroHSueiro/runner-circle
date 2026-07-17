@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { Feed } from "@mui/icons-material";
 
 function NewPost({ onNavigateToFeed }) {
-  const [addFeedPost, { loading: savingPost }] = useMutation(ADD_FEED_POST, {
+  const [AddFeedPost, { loading: savingPost }] = useMutation(ADD_FEED_POST, {
     refetchQueries: [{ query: GET_FEED }, { query: GET_FEED_BY_CATEGORY }],
     update: (cache, { data: { createFeed } }) => {
       try {
@@ -39,7 +39,10 @@ function NewPost({ onNavigateToFeed }) {
             query: GET_FEED_BY_CATEGORY,
             variables: { category: createFeed.category },
             data: {
-              feed: [createFeed, ...existingCategoryFeed.feedByCategory],
+              feedByCategory: [
+                createFeed,
+                ...existingCategoryFeed.feedByCategory,
+              ],
             },
           });
         }
@@ -67,7 +70,7 @@ function NewPost({ onNavigateToFeed }) {
         timestamp: new Date().toISOString(),
       };
 
-      await addFeedPost({ variables: formParam });
+      await AddFeedPost({ variables: formParam });
     } catch (error) {
       console.error("Erro ao salvar treino:", error);
     }
