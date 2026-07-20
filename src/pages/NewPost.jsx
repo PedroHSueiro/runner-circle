@@ -1,34 +1,101 @@
-import Header from '../components/layout/Header'
-import Sidebar from '../components/layout/Sidebar'
-import BottomNavigation from '../components/layout/BottomNavigation'
-import NewPostForm from '../components/forms/NewPostForm'
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+import BottomNavigation from "../components/layout/BottomNavigation";
+import NewPostForm from "../components/forms/NewPostForm";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { ADD_FEED_POST } from "../../database/graphql/mutations/feed";
+import {
+  GET_FEED,
+  GET_FEED_BY_CATEGORY,
+} from "../../database/graphql/queries/feed";
+import { useEffect, useState } from "react";
+import { Feed } from "@mui/icons-material";
 
 function NewPost({ onNavigateToFeed }) {
-  const handleSubmit = (formData) => {
-    console.log('Nova postagem:', formData)
-    // Aqui seria onde salvaria os dados no backend
-    // Por enquanto, só navega de volta ao feed
-    onNavigateToFeed?.()
-  }
+  const [AddFeedPost, { loading: savingPost }] = useMutation(ADD_FEED_POST, {
+    refetchQueries: [{ query: GET_FEED }, { query: GET_FEED_BY_CATEGORY }],
+    update: (cache, { data: { createFeed } }) => {
+      try {
+        const existingFeed = cache.readQuery({ query: GET_FEED });
+        if (existingFeed) {
+          cache.writeQuery({
+            query: GET_FEED,
+            data: {
+              feed: [createFeed, ...existingFeed],
+            },
+          });
+        }
+      } catch (error) {
+        console.log("Chache update error:", error);
+      }
+
+      try {
+        const existingCategoryFeed = cache.readQuery({
+          query: GET_FEED_BY_CATEGORY,
+          variables: { category: createFeed.category },
+        });
+        if (existingCategoryFeed) {
+          cache.writeQuery({
+            query: GET_FEED_BY_CATEGORY,
+            variables: { category: createFeed.category },
+            data: {
+              feedByCategory: [
+                createFeed,
+                ...existingCategoryFeed.feedByCategory,
+              ],
+            },
+          });
+        }
+      } catch (error) {
+        console.log("Chache update error:", error);
+      }
+    },
+  });
+
+  const handleSubmit = async (formData) => {
+    try {
+      const formParam = {
+        user: {
+          id: "1",
+          name: "Pedro Mello",
+        },
+        time: parseInt(formData.tempo) * 60,
+        stats: {
+          distance: formData.ritmo + "Km",
+          calories: formData.calorias + "Kcal",
+          heartRate: formData.bpm + "BPM",
+        },
+        category: formData.tipoTreino,
+        description: formData.descricao,
+        timestamp: new Date().toISOString(),
+      };
+
+      await AddFeedPost({ variables: formParam });
+    } catch (error) {
+      console.error("Erro ao salvar treino:", error);
+    }
+    onNavigateToFeed?.();
+  };
 
   const handleCancel = () => {
-    onNavigateToFeed?.()
-  }
+    onNavigateToFeed?.();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <div className="flex">
         {/* Desktop Sidebar */}
         <Sidebar activeItem="feed" />
-        
+
         {/* Main Content */}
         <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
           <div className="max-w-4xl mx-auto">
-            <NewPostForm 
+            <NewPostForm
               onSubmit={handleSubmit}
               onCancel={handleCancel}
+              loading={savingPost}
             />
           </div>
         </main>
@@ -37,7 +104,7 @@ function NewPost({ onNavigateToFeed }) {
       {/* Mobile Bottom Navigation */}
       <BottomNavigation activeItem="feed" />
     </div>
-  )
+  );
 }
 
-export default NewPost
+export default NewPost;
